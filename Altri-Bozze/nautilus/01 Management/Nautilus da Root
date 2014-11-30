@@ -1,0 +1,19 @@
+#!/bin/bash
+#Rootilus
+#########################################################
+#							#
+# This are NScripts v3.5				#
+#							#
+# Licensed under the GNU GENERAL PUBLIC LICENSE 3	#
+#							#
+# Copyright 2007 - 2008 Christopher Bratusek		#
+#							#
+#########################################################
+
+if [[ -x /usr/bin/gksu || -x /opt/gnome/bin/gksu ]]; then
+	sudotool=gksu
+elif [[ -x /usr/bin/gnomesu || -x /opt/gnome/bin/gnomesu ]]; then
+	sudotool=gnomesu
+fi
+
+$sudotool "nautilus --no-desktop $NAUTILUS_SCRIPT_CURRENT_URI"

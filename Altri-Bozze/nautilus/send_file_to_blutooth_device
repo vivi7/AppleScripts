@@ -1,0 +1,10 @@
+#!/bin/sh
+# Author : Carlos Jim=E9nez <carlosjimenezdelgado@gmail.com>
+# Date : 03/9/2005
+# depends: gnome-bluetooth, zenity
+# version 0.1
+# This script send a file to a bluetooh device
+# Copy this script in your ~/.gnome2/nautilus-scripts directory
+
+gnome-obex-send $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS
+exit 0

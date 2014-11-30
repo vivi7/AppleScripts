@@ -1,0 +1,238 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import Process
+
+import gtk
+import os
+import string
+
+# VARIABLES POR DEFECTO
+
+tamImg = 800
+tamMin = 150
+nombreMin = "p"
+
+def alerta (cadena):
+	dialogo = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, cadena)
+	dialogo.run()
+	dialogo.destroy()
+
+def ClickAceptar(widget):
+	archivos = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+	for archivo in archivos:
+		if archivo != "":
+			if os.path.isdir(archivo):
+				ProcesarDirectorio(archivo)
+			else:
+				ProcesarImagen(archivo)
+
+	alerta("La procedura è terminata con successo")
+	gtk.main_quit()
+
+def ProcesarDirectorio(directorio):
+	archivos = os.listdir(directorio)
+	for archivo in archivos:
+		archivo = directorio + "/" + archivo
+		if os.path.isdir(archivo):
+			ProcesarDirectorio(archivo)
+		else:
+			ProcesarImagen(archivo)
+
+def ProcesarImagen(archivo):
+	program = "convert"
+
+	if getExtension(archivo) == "JPG" or getExtension(archivo) == "PNG":
+		image = gtk.gdk.pixbuf_new_from_file( archivo )
+		#alerta (str(image.get_width()) + "X" + str(image.get_height()))
+		intercambiar = False
+		if cbIntercambiar.get_active() and image.get_height()>image.get_width():
+			intercambiar = True
+
+		# creamos miniatura si hace falta
+		if cbMiniatura.get_active():
+			geo = ""
+			if cbPorcentajeMin.get_active():
+				geo = str(spinTamMin.get_value())+"%"
+			else:
+				if intercambiar:
+					if rbTamAncho.get_active():
+						geo = "x"+str(spinTamMin.get_value())
+					else:
+						geo = str(spinTamMin.get_value())+"x"
+				else:
+					if rbTamAncho.get_active():
+						geo = str(spinTamMin.get_value())+"x"
+					else:
+						geo = "x"+str(spinTamMin.get_value())
+
+			arguments = ["-resize", geo, archivo, getNombreMiniatura(archivo)]
+			os.spawnvp(os.P_NOWAIT, program, (program,) +  tuple(arguments))
+
+		# redimensionamos imagen
+		geo = ""
+		if cbPorcentaje.get_active():
+			geo = str(spinTam.get_value()) + "%"
+		else:
+			if intercambiar:
+				if rbTamAncho.get_active():
+					geo = "x"+str(spinTam.get_value())
+				else:
+					geo = str(spinTam.get_value())+"x"
+			else:
+				if rbTamAncho.get_active():
+					geo = str(spinTam.get_value())+"x"
+				else:
+					geo = "x"+str(spinTam.get_value())
+
+		arguments = ["-resize", geo, archivo, archivo]
+		os.spawnvp(os.P_NOWAIT, program, (program,) +  tuple(arguments))
+
+def getNombreMiniatura(archivo):
+	trozos = archivo.split("/")
+	i = 0
+	miniatura = ""
+	while i<len(trozos)-1:
+		if trozos[i] != "":
+			miniatura = miniatura  + "/" + trozos[i]
+		i = i + 1
+
+	miniatura = miniatura + "/" + entryNombre.get_text() + trozos[i]
+
+	return miniatura
+
+def getExtension(archivo):
+	trozos = archivo.split(".")
+	return string.upper(trozos[len(trozos)-1])
+
+def ClickCancelar(widget):
+	gtk.main_quit()
+
+def ReleasedCrearMiniatura(widget):
+	spinTamMin.set_sensitive(cbMiniatura.get_active())
+	cbPorcentajeMin.set_sensitive(cbMiniatura.get_active())
+	entryNombre.set_sensitive(cbMiniatura.get_active())
+
+# PROGRAMA
+
+if Process.verifyCommands("convert%ImageMagick")==False:
+	sys.exit()
+
+w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+w.set_title("Ridimensionare immagini e miniature")
+w.set_border_width(30)
+
+w.connect("destroy", gtk.mainquit) 
+#l = gtk.Label(os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'])
+
+table = gtk.Table(5, 3, False)
+
+table.set_row_spacings(8)
+table.set_col_spacings(8)
+
+lAncho = gtk.Label("Dimensione:")
+
+table.attach(lAncho, 0, 1, 0, 1)
+
+adjTam = gtk.Adjustment(1.0, 1.0, 999999.0, 1.0, 5.0, 0.0)
+spinTam = gtk.SpinButton(adjTam, 0, 0)
+spinTam.set_value(tamImg)
+
+table.attach(spinTam, 1, 2, 0, 1)
+
+cbPorcentaje = gtk.CheckButton("%")
+table.attach(cbPorcentaje, 2, 3, 0, 1)
+
+lAlto = gtk.Label("Proporzioni secondo:")
+
+table.attach(lAlto, 0, 1, 1, 2)
+
+boxTamRadio = gtk.HBox(False, 4)
+boxTamRadio.set_border_width(4)
+boxTamRadio.show()
+
+rbTamAncho = gtk.RadioButton(None, "Larghezza")
+rbTamAncho.set_active(True)
+rbTamAncho.show()
+boxTamRadio.pack_start(rbTamAncho, True, True, 0)
+
+rbTamAlto = gtk.RadioButton(rbTamAncho, "Altezza")
+rbTamAlto.show()
+boxTamRadio.pack_start(rbTamAlto, True, True, 0)
+
+table.attach(boxTamRadio, 1, 3, 1, 2)
+
+cbIntercambiar = gtk.CheckButton("Scambiare le dimensioni per le immagini verticali")
+
+cbIntercambiar.set_active(True);
+
+table.attach(cbIntercambiar, 0, 3, 2, 3)
+
+cbMiniatura = gtk.CheckButton("Creare miniature")
+
+cbMiniatura.connect("released", ReleasedCrearMiniatura)
+
+frameMiniatura = gtk.Frame()
+frameMiniatura.set_label_widget(cbMiniatura)
+
+# tabla de la miniatura
+
+tableMin = gtk.Table(2, 3, False)
+tableMin.set_border_width(10)
+
+tableMin.set_row_spacings(8)
+tableMin.set_col_spacings(8)
+
+lTamMin = gtk.Label("Dimensione:")
+
+tableMin.attach(lTamMin, 0, 1, 0, 1)
+
+adjTamMin = gtk.Adjustment(1.0, 1.0, 999999.0, 1.0, 5.0, 0.0)
+spinTamMin = gtk.SpinButton(adjTamMin, 0, 0)
+spinTamMin.set_value(tamMin)
+spinTamMin.set_sensitive(False)
+
+tableMin.attach(spinTamMin, 1, 2, 0, 1)
+
+cbPorcentajeMin = gtk.CheckButton("%")
+cbPorcentajeMin.set_sensitive(False)
+tableMin.attach(cbPorcentajeMin, 2, 3, 0, 1)
+
+lNombreMin = gtk.Label("Prefisso:")
+
+tableMin.attach(lNombreMin, 0, 1, 2, 3)
+
+entryNombre = gtk.Entry()
+entryNombre.set_text(nombreMin)
+entryNombre.set_sensitive(False)
+
+tableMin.attach(entryNombre, 1, 3, 2, 3)
+
+frameMiniatura.add(tableMin)
+
+table.attach(frameMiniatura, 0, 3, 3, 4)
+
+# botones
+
+aligBotones = gtk.Alignment(1.0, 0.0)
+boxBotones = gtk.HBox(True, 4)
+
+bAceptar = gtk.Button("Accettare", gtk.STOCK_OK)
+
+bAceptar.connect("clicked", ClickAceptar)
+
+boxBotones.pack_start(bAceptar, False, False, 0)
+
+bCancelar = gtk.Button("Annullare", gtk.STOCK_CANCEL)
+
+bCancelar.connect("clicked", ClickCancelar)
+
+boxBotones.pack_start(bCancelar, False, False, 0)
+
+aligBotones.add(boxBotones)
+
+table.attach(aligBotones, 1, 2, 4, 5)
+
+w.add(table)
+w.show_all()
+gtk.main()

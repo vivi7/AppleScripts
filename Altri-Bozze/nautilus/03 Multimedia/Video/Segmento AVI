@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import Process
+
+import gtk
+import os
+import sys
+import string
+
+def ClickAceptar(widget):
+
+	ini = (int(spinIniHour.get_value())*60*60) + (int(spinIniMin.get_value())*60) + int(spinIniSeg.get_value())
+
+	end = (int(spinEndHour.get_value())*60*60) + (int(spinEndMin.get_value())*60) + int(spinEndSeg.get_value())
+
+	if ini >= end:
+		Process.alert("Il tempo finale deve essere maggiore di quello iniziale")
+	else:
+
+		time = end - ini
+
+		Process.ProcessFiles(
+			"mencoder $FILE$ -ovc copy -oac copy -ss " + str(ini) + " -endpos " + str(time) + " -o $NAME$_extract.$EXT$", # comando a ejecutar
+			"avi", # tipo de archivos
+			False, # leer directorios?
+			False, # procesar directorio como un archivo
+			"Processo Terminato") # mensaje final
+		gtk.main_quit()
+
+def ClickCancelar(widget):
+	gtk.main_quit()
+
+# PROGRAMA
+
+if Process.verifyCommands("mencoder")==False:
+	sys.exit()
+
+w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+w.set_title("Esporta segmento AVI")
+w.set_border_width(20)
+
+w.connect("destroy", gtk.main_quit) 
+
+# tabla
+
+tableMin = gtk.Table(2, 1, False)
+tableMin.set_border_width(10)
+
+tableMin.set_row_spacings(8)
+tableMin.set_col_spacings(8)
+
+
+lBegin = gtk.Label("Inizio [hh:mm:ss]")
+
+tableMin.attach(lBegin, 0, 1, 0, 1)
+
+boxIni = gtk.HBox(True, 4)
+
+adjIniHour = gtk.Adjustment(1.0, 0.0, 20.0, 1.0, 5.0, 0.0)
+spinIniHour = gtk.SpinButton(adjIniHour, 0, 0)
+adjIniHour.set_value(0)
+boxIni.pack_start(spinIniHour, False, False, 0)
+
+adjIniMin = gtk.Adjustment(1.0, 0.0, 60.0, 1.0, 5.0, 0.0)
+spinIniMin = gtk.SpinButton(adjIniMin, 0, 0)
+adjIniMin.set_value(0)
+boxIni.pack_start(spinIniMin, False, False, 0)
+
+adjIniSeg = gtk.Adjustment(1.0, 0.0, 60.0, 1.0, 5.0, 0.0)
+spinIniSeg = gtk.SpinButton(adjIniSeg, 0, 0)
+adjIniSeg.set_value(0)
+boxIni.pack_start(spinIniSeg, False, False, 0)
+
+tableMin.attach(boxIni, 1, 2, 0, 1)
+
+lEnd = gtk.Label("Fine [hh:mm:ss]:")
+
+tableMin.attach(lEnd, 0, 1, 1, 2)
+
+boxEnd = gtk.HBox(True, 4)
+
+adjEndHour = gtk.Adjustment(1.0, 0.0, 20.0, 1.0, 5.0, 0.0)
+spinEndHour = gtk.SpinButton(adjEndHour, 0, 0)
+adjEndHour.set_value(0)
+boxEnd.pack_start(spinEndHour, False, False, 0)
+
+adjEndMin = gtk.Adjustment(1.0, 0.0, 60.0, 1.0, 5.0, 0.0)
+spinEndMin = gtk.SpinButton(adjEndMin, 0, 0)
+adjEndMin.set_value(0)
+boxEnd.pack_start(spinEndMin, False, False, 0)
+
+adjEndSeg = gtk.Adjustment(1.0, 0.0, 60.0, 1.0, 5.0, 0.0)
+spinEndSeg = gtk.SpinButton(adjEndSeg, 0, 0)
+adjEndSeg.set_value(0)
+boxEnd.pack_start(spinEndSeg, False, False, 0)
+
+tableMin.attach(boxEnd, 1, 2, 1, 2)
+
+
+# botones
+
+aligBotones = gtk.Alignment(1.0, 0.0)
+boxBotones = gtk.HBox(True, 4)
+
+bAceptar = gtk.Button("Accettare", gtk.STOCK_OK)
+
+bAceptar.connect("clicked", ClickAceptar)
+
+boxBotones.pack_start(bAceptar, False, False, 0)
+
+bCancelar = gtk.Button("Annullare", gtk.STOCK_CANCEL)
+
+bCancelar.connect("clicked", ClickCancelar)
+
+boxBotones.pack_start(bCancelar, False, False, 0)
+
+aligBotones.add(boxBotones)
+
+tableMin.attach(aligBotones, 1, 2, 4, 5)
+
+w.add(tableMin)
+w.show_all()
+gtk.main()

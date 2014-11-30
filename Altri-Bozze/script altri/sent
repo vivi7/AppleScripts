@@ -1,0 +1,16 @@
+From vincy@vincy-v Sun Oct  3 23:16:55 2010
+Date: Sun, 3 Oct 2010 23:16:55 +0200
+From: vincy <vincy@vincy-v>
+To: vivi7dark@gmail.com
+Subject: ip
+Message-ID: <20101003211655.GA26080@vincy-v>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.5.20 (2009-06-14)
+Status: RO
+Content-Length: 82
+Lines: 1
+
+wget -q -O - checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//'
+

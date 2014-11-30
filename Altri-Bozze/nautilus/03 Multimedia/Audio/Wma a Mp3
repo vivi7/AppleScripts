@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import Process
+import os
+
+if Process.verifyCommands("mplayer|lame")==False:
+	sys.exit()
+
+def ProcessDirectory(d):
+	files = os.listdir(d)
+	for f in files:
+		f = d + "/" + f
+		if os.path.isdir(f):
+			ProcessDirectory(f)
+		else:
+			ProcessFile(f)
+
+def ProcessFile(f):
+	if Process.getExtension(f) == "WMA":
+		Process.ProcessFileByArgument("mplayer \"" + f + "\" -ao pcm")
+		Process.ProcessFileByArgument("lame -h -m j audiodump.wav \"" + Process.getPath(f) + "/" + Process.getName(f) + ".mp3\"")
+		Process.ProcessFileByArgument("rm audiodump.wav")
+
+
+
+files = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+
+
+for f in files:
+	if f != "":
+		if os.path.isdir(f):
+			ProcessDirectory(f)
+		else:
+			ProcessFile(f)
+
+
+

@@ -1,0 +1,73 @@
+#!/bin/sh
+# Script Name: Batch Watermark Script v1.0 Gnome Linux Zenity 
+# Author: nubuntu
+# Credit: Linerd http://tuxtweaks.com
+# Contact: ohbuntu@gmail.com
+# Homepage: http://ohbuntu.blogspot.com
+# Require: Zenity, ImageMagick, coreutils
+# License:	Creative Commons Attribution - Share Alike 3.0 http://creativecommons.org/licenses/by-sa/3.0/
+#		You are free to use and/or modify this script. If you choose to distribute this script, with or
+#		without changes, you must attribute credit to the author listed above.
+
+# Initiate watermarking?
+ans=$(zenity --question \
+	--title "Batch Watermark" \
+	--text="You are about to watermark all image files in this folder. This script will NOT delete original images. New set of watermarked images will be placed in a new folder. Cancel to quit this script. OK to continue and select an image as watermark"; echo $?;)
+
+if [ "$ans" = 0 ]; then 
+
+# Watermark image path entry
+WMIMAGE=$(zenity --file-selection \
+	--title "Batch Watermark" \
+	--text="Select watermark image file:");
+
+# This sets the scale % of your watermark image
+SCALE=$(zenity --scale --min-value=10 --max-value=500 --value=100 --step 10 \
+	--title='Batch Watermark' --text='Size of watermark image (%):' );
+
+# This sets the opacity % of your watermark image
+OPACITY=$(zenity --scale --min-value=10 --max-value=100 --value=50 --step 5 \
+	--title='Batch Watermark' --text='Opacity of watermark image (%):');                       
+
+# This sets gravity of watermark
+GRAVITY=$(zenity  --list \
+	--width=300 \
+	--height=340 \
+	--title "Batch Watermark" \
+	--text "Select watermark position:" \
+	--column "Command" --column "Position" --hide-column "1" \
+	Center "Center" \
+	North "Top" \
+	NorthEast "Top Right" \
+	East "Right" \
+	SouthEast "Bottom Right" \
+	South "Bottom" \
+	SouthWest "Bottom Left" \
+	West "Left" \
+	NorthWest "Top Left" );
+
+# Find all image files in current directory and watermark.
+file -i * | grep image | awk -F':' '{ print $1 }' |  while read IMAGE 
+	do 
+	name=`echo $IMAGE | cut -f1 -d.`
+	ext=`echo $IMAGE | cut -f2 -d.` 
+	composite -dissolve $OPACITY% -gravity $GRAVITY -geometry +0+0 -quality 100 \( $WMIMAGE -resize $SCALE% \) "$IMAGE" "${name}_wm.${ext}" | zenity --progress --pulsate --width=300 --title "Batch Watermark" --text="Processing..." --auto-close --auto-kill
+if [ "$?" != 0 ]; then 
+	zenity --error \
+	--text="Process failed!" --title "Batch Watermark"
+	exit 1
+	fi
+done 
+# Move images to Watermarked directory 
+mkdir Watermarked
+mv *_wm.* Watermarked 
+cd Watermarked/
+date | tee -a wm_imagelist.txt
+file -i * | grep image | tee -a wm_imagelist.txt | zenity --info --width=200 --title "Batch Watermark" --text="Process completed" --timeout=10
+
+else 
+zenity --info --timeout=2 \
+	--title "Batch Watermark" \
+	--text "Batch Watermark Script cancelled!" 
+fi
+exit 0

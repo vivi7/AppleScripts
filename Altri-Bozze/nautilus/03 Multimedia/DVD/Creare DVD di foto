@@ -1,0 +1,732 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import Process
+
+import gtk
+import os
+import sys
+import string
+from random import randrange
+from xml.dom import minidom
+
+dictTitle = {}
+
+dictMusic = {}
+
+dictBg = {}
+
+dictMusicName = {}
+
+dictBgName = {}
+
+BgMenuFile = ""
+MusicMenuFile = ""
+
+fileXML = ""
+
+def getNameFileTXT(title):
+	sub = title.split(" ")
+	st = ""
+	sw = 0
+	for s  in sub:
+		if sw == 0:
+			st = s
+			sw = 1
+		else:
+			st = st + "_" + s
+
+	st = st + ".txt"
+	return st
+
+def getNameFileXML(title):
+	sub = title.split(" ")
+	st = ""
+	sw = 0
+	for s  in sub:
+		if sw == 0:
+			st = s
+			sw = 1
+		else:
+			st = st + "_" + s
+
+	st = st + ".xml"
+	return st
+
+
+def ClickAccept(widget):
+
+	global dictTitle
+	global dictMusic
+	global dictBg
+	global BgMenuFile
+	global MusicMenuFile
+	global fileXML
+
+	if entryBgMenu.get_text()!="":
+		pb = gtk.gdk.pixbuf_new_from_file( entryBgMenu.get_text() )
+		if pb.get_width()!=720 or pb.get_height()!=576:
+			Process.alert("L'immagine di sfondo del menu deve essere 720x576")
+			return
+
+	titles = True
+	titlesText = ""
+
+	if entryTitulo.get_text()=="":
+		titles = False
+		titlesText = titlesText+"\n    * Manca il titolo principale"
+
+	directories = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+	for directory in directories:
+		if directory != "":
+			if os.path.isdir(directory):
+				dirName = Process.getFile(directory)
+				if dictTitle[dirName]=="":
+					titles = False
+					titlesText = titlesText+"\n    *Nome della directory \""+dirName+"\""
+
+	if titles == False:
+		Process.alert("Bisogna riempire i seguenti titoli:"+titlesText)
+		return
+
+	# creamos directorio de salida
+	pathDVD = Process.getCurrentDirectory()+"/out/"
+		
+	Process.ProcessFileByArgument(
+		"mkdir \""+pathDVD+"\"")
+
+	# recorremos todos los directorios
+	directories = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+
+	strMenu = ""
+
+	if cbPhotoMenu.get_active() == True:
+		strMenu = strMenu + " -e \"" + pathDVD + "/polaroid.png\""
+
+	nDir = 0
+
+	arPhotosPolaroid = []
+
+	for directory in directories:
+		if directory != "":
+			if os.path.isdir(directory):
+				nDir = nDir + 1
+				dirName = Process.getFile(directory)
+				fileXML = directory+"/"+".comments_nautilus.xml"
+
+				# ponemos los comentarios a los fotos
+				if cbComment.get_active() == True and os.path.isfile(fileXML):
+					# hacemos copias de las fotos
+					Process.ProcessFileByArgument(
+						"mkdir \""+directory+"/copia/\"")
+					files = os.listdir(directory)
+					for f in files:
+						if Process.getExtension(f)=="JPG" or Process.getExtension(f)=="PNG":
+							data = readPhotoXML(f)
+							fPath = directory+"/" + f
+							Process.ProcessFileByArgument(
+								"cp \""+ fPath + "\" \""+directory+"/copia/\"")
+							if data[0]!="" or data[1]!="":
+								# ponemos comentarios
+								pb = gtk.gdk.pixbuf_new_from_file( fPath )
+								if pb.get_height()<pb.get_width():
+									Process.ProcessFileByArgument(
+										"convert -resize 720x \"" + fPath + "\" \"" + fPath + "\"")
+									pb = gtk.gdk.pixbuf_new_from_file( fPath )
+									supV = abs((pb.get_height()-576)/2)
+									supH = abs((pb.get_width()-720)/2)
+									if pb.get_height()<576:
+										Process.ProcessFileByArgument(
+											"convert -size 720x576 gradient:black-black -draw \"image Over "+ str(supH) +","+ str(supV) +" "+str(pb.get_width()+supH)+","+str(pb.get_height()+supV)+" '" + fPath + "'\" \"" + fPath + "\"")
+									elif pb.get_height()>576:
+										Process.ProcessFileByArgument(
+											"convert \"" + fPath + "\" -crop 720x576+0+"+ str(supV) + " \"" + fPath + "\"")
+								else:
+									Process.ProcessFileByArgument(
+										"convert -resize x576 \"" + fPath + "\" \"" + fPath + "\"")
+									pb = gtk.gdk.pixbuf_new_from_file( fPath )
+									supV = abs((pb.get_height()-576)/2)
+									supH = abs((pb.get_width()-720)/2)
+									Process.ProcessFileByArgument(
+										"convert -size 720x576 gradient:black-black -draw \"image Over "+ str(supH) +","+ str(supV) +" "+str(pb.get_width()+supH)+","+str(pb.get_height()+supV)+" '" + fPath + "'\" \"" + fPath + "\"")
+
+								Process.ProcessFileByArgument(
+									"convert -fill black -draw \"fill-opacity 0.5 rectangle 0,490 720,576\" -font helvetica -fill yellow -pointsize 25 -draw \"text 30,520 '" + data[0] + "'\" -fill white -pointsize 22 -draw \"text 60,550 '" + data[1] + "'\" \"" + fPath + "\" \"" + fPath + "\"")
+
+
+				Process.ProcessFileByArgument(
+					"mkdir \""+directory+"/video/\"")
+
+				Process.ProcessFileByArgument(
+					"dir2slideshow -o \""+directory+"/video/\" -t " + str(int(spinSegundosImagen.get_value())) + " -c " + str(int(spinTransImagen.get_value())) + " -n \""+ dictTitle[dirName] + "\" \""+directory+"\"")
+
+				bgAndMusic = ""
+
+				if dictBg[dirName]!="":
+					bgAndMusic = bgAndMusic + " -b \"" + dictBg[dirName] + "\""
+
+				if dictMusic[dirName]!="":
+					# calculamos el tiempo del mp3
+					secondsMp3 = os.popen("mp3info -p %S \""+dictMusic[dirName]+"\"").readlines()
+					files = os.listdir(directory)
+					nPhotos = 0
+					for f in files:
+						if Process.getExtension(f)=="JPG" or Process.getExtension(f)=="PNG":
+							nPhotos = nPhotos + 1
+					secondsPhotos = (int(spinSegundosImagen.get_value()) + int(spinTransImagen.get_value()))*(nPhotos+1)
+					timesMp3 = (secondsPhotos / int(secondsMp3[0]))+1
+					for i in range(0,timesMp3):
+						bgAndMusic = bgAndMusic + " -a \"" + dictMusic[dirName] + "\""
+
+
+				Process.ProcessFileByArgument(
+					"dvd-slideshow -p" + bgAndMusic + " -o \""+directory+"/video/\" -n \""+ dictTitle[dirName] + "\" -f \""+directory+"/video/"+getNameFileTXT(dictTitle[dirName])+"\" -r")
+
+				if cbComment.get_active() == True and os.path.isfile(fileXML):
+					files = os.listdir(directory+"/copia")
+					for f in files:
+						if Process.getExtension(f)=="JPG" or Process.getExtension(f)=="PNG":
+							Process.ProcessFileByArgument(
+								"rm \""+directory+"/"+f+"\"")
+							Process.ProcessFileByArgument(
+								"cp \""+directory+"/copia/"+f+"\" \""+directory+"\"")
+					Process.ProcessFileByArgument(
+						"rm -r \""+directory+"/copia\"")
+
+				if cbPhotoMenu.get_active() == True and len(arPhotosPolaroid) < 4:
+					files = os.listdir(directory)
+					for f in files:
+						if Process.getExtension(f)=="JPG" or Process.getExtension(f)=="PNG":
+							fNew = pathDVD + str(nDir) + f	
+							Process.ProcessFileByArgument(
+								"cp \""+directory+"/"+f+"\" \""+fNew+"\"")
+							pb = gtk.gdk.pixbuf_new_from_file( fNew )
+							if pb.get_height()<pb.get_width():
+								Process.ProcessFileByArgument(
+									"convert -resize 250x \"" + fNew + "\" \"" + fNew + "\"")
+							else:
+								Process.ProcessFileByArgument(
+									"convert -resize x250 \"" + fNew + "\" \"" + fNew + "\"")
+							arPhotosPolaroid.append(fNew)
+							#strMenu = strMenu + " -e \"" + fNew + "\""
+							break
+
+				# ponemos el número de fotos si hace falta
+				title = dictTitle[dirName]
+
+				if cbNTitle.get_active()==True:
+					title = str(nDir) + "- " + dictTitle[dirName]
+
+				if cbNPhotos.get_active()==True:
+					files = os.listdir(directory)
+					np = 0
+					for f in files:
+						if Process.getExtension(f)=="JPG" or Process.getExtension(f)=="PNG":
+							np = np + 1
+					title = title + " (" + str(np) + ")"
+
+				strMenu = strMenu + " -t \"" + title + "\" -f \""+directory+"/video/"+getNameFileXML(dictTitle[dirName])+"\""
+
+	if cbPhotoMenu.get_active() == True:
+		CreatePolaroid(arPhotosPolaroid, pathDVD)
+
+	bgAndMusic = ""
+	if BgMenuFile!="":
+		bgAndMusic = bgAndMusic + " -b \"" + BgMenuFile + "\""
+
+	if MusicMenuFile!="":
+		bgAndMusic = bgAndMusic + " -a \"" + MusicMenuFile + "\""
+
+
+	Process.ProcessFileByArgument(
+		"dvd-menu -iso" + bgAndMusic + " -o \"" + pathDVD + "\"" + strMenu + " -n \""+ entryTitulo.get_text() + "\"" )
+
+	# borramos todo
+	if cbDelete.get_active() == True:
+		directories = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+
+		for directory in directories:
+			if directory != "":
+				if os.path.isdir(directory):
+					Process.ProcessFileByArgument(
+						"rm -r \""+directory+"/video\"")
+
+			Process.ProcessFileByArgument(
+				"rm -r \""+pathDVD+"\"")
+
+	Process.alert("Creata ISO con il progetto. File \"dvd.iso\"")
+	gtk.main_quit()
+
+
+def ClickCancel(widget):
+	gtk.main_quit()
+
+def ClickHelp(widget):
+	Process.alert("Questo script può durare parecchi minuti a seconda del numero di foto"+
+			" che si vogliono inserire nel dvd. Durante il processo"+
+			" il computer può rallentarsi a causa delle risorse occupate."+
+			"Per questi motivi si raccomanda di non fare altri lavori durante questo tempo se è possibile.\n"+			
+                        "Le immagini che si usano come sfondo devono avere una dimensione "+
+			"720 x 576 (PAL)\n\n"+
+			"\nLo script è stato creato da Javier Perez Pacheco\n"+
+			"http://www.javielinux.com/")
+
+def CreatePolaroid(photos, pathDirectories):
+
+	nPhotos = len(photos)
+	columns = 2
+	rows = nPhotos/columns
+	if nPhotos%columns!=0:
+		rows = rows + 1
+
+	widthImg = 260 / columns
+
+	border = -(widthImg/5)
+
+	widthTotal = 260 + ( border*(columns-1) )
+
+	heightTotal = widthImg*rows + ( border*(rows-1) )
+
+	# copiar archivos
+
+	strDraw = ""
+
+	currentRow = 0
+	currentColumn = 0
+
+	filesArray = []
+
+	for f in photos:
+		if f != "":
+			path = Process.getPath(f)
+			fileName = Process.getFile(f)
+			fileNameCopy = Process.getName(fileName) + "_copy.png"
+			fileCopy = path + "/" + fileNameCopy
+
+			fileNameShadow = Process.getName(fileName) + "_shadow.png"
+			fileShadow = path + "/" + fileNameShadow
+
+			filesArray.append(fileCopy)
+			filesArray.append(fileShadow)
+
+			pb = gtk.gdk.pixbuf_new_from_file( f )
+			if pb.get_height()<pb.get_width():
+				Process.ProcessFileByArgument(
+					"convert -resize " + str(widthImg) + "x \"" + f + "\" \"" + fileCopy + "\"")
+			else:
+				Process.ProcessFileByArgument(
+					"convert -resize x" + str(widthImg) + " \"" + f + "\" \"" + fileCopy + "\"")
+
+			pb = gtk.gdk.pixbuf_new_from_file( fileCopy )
+
+			# polaroid
+
+			borderPolaroid = widthImg/30
+
+			Process.ProcessFileByArgument(
+				"convert -size " + str(pb.get_width()+(borderPolaroid*2)) + "x" + str(pb.get_height()+(borderPolaroid*6)) + " gradient:#f0f0ff-#f0f0ff -draw \"image Over " + str(borderPolaroid) + "," + str(borderPolaroid) + " "+str(pb.get_width())+","+str(pb.get_height())+" '" + fileCopy + "'\" \"" + fileCopy + "\"")
+
+			widthPhoto = pb.get_width()+borderPolaroid
+			heightPhoto = pb.get_height()+borderPolaroid
+
+			pb = gtk.gdk.pixbuf_new_from_file( fileCopy )
+
+			#Process.ProcessFileByArgument(
+			#	"convert -fill transparent -stroke #000000 -strokewidth 1 -draw \"rectangle 0,0 "+str(pb.get_width())+","+str(pb.get_height())+"\" -draw \"rectangle " + str(borderPolaroid) + "," + str(borderPolaroid) + " "+str(widthPhoto)+","+str(heightPhoto)+"\" \"" + fileCopy + "\" \"" + fileCopy + "\"")
+
+			Process.ProcessFileByArgument(
+				"convert -background none -fill transparent -wave " + str(pb.get_width()*0.01) + "x" + str(pb.get_height()*2) + " \"" + fileCopy + "\" \"" + fileCopy + "\"")
+
+			Process.ProcessFileByArgument(
+				"convert -background none -fill transparent -bordercolor transparent -border 10 -background none -rotate " + str(randrange(-10,10)) + " \"" + fileCopy + "\" \"" + fileCopy + "\"")
+
+			# redimensionamos de nuevo con el filo polaroid
+			if pb.get_height()<pb.get_width():
+				Process.ProcessFileByArgument(
+					"convert -resize " + str(widthImg) + "x \"" + fileCopy + "\" \"" + fileCopy + "\"")
+			else:
+				Process.ProcessFileByArgument(
+					"convert -resize x" + str(widthImg) + " \"" + fileCopy + "\" \"" + fileCopy + "\"")
+
+			# ponemos sombra
+			Process.ProcessFileByArgument(
+				"convert \"" + fileCopy + "\"  -channel A  -blur 0x6  -channel RG -fx 0  -channel B -fx .25 \"" + fileShadow + "\"")
+
+			Process.ProcessFileByArgument(
+				"convert \"" + fileCopy + "\" -background none -gravity SouthEast -splice 6x6+0+0 \"" + fileShadow + "\" -compose Dst_Over -composite \"" + fileCopy + "\" ")
+
+			pb = gtk.gdk.pixbuf_new_from_file( fileCopy )
+
+			supH = currentColumn*widthImg + ( (widthImg-pb.get_width())/2 ) + ( border*(currentColumn) )
+			supV = currentRow*widthImg + ( (widthImg-pb.get_height())/2 ) + ( border*(currentRow) )
+
+			strDraw = strDraw + " -draw \"image Over "+ str(supH) +","+ str(supV) +" "+str(pb.get_width())+","+str(pb.get_height())+" '" + fileCopy + "'\""
+
+			currentColumn = currentColumn + 1
+
+			if currentColumn >= columns:
+				currentColumn = 0
+				currentRow = currentRow + 1
+
+
+	# mosaico
+	bg = " gradient: -channel A -fx 0 "
+
+	Process.ProcessFileByArgument(
+		"convert -background none -fill transparent -size " + str(widthTotal) + "x" + str(heightTotal) + bg + strDraw + " \"" + pathDirectories + "/polaroid.png\"")
+
+	# borramos temporales
+
+	for f in filesArray:
+		Process.ProcessFileByArgument(
+			"rm \""+f+"\"")
+
+def ClickOpenBg(widget, data=None):
+	global BgMenuFile
+	global MusicMenuFile
+
+	dialog = gtk.FileChooserDialog("Aprire uno sfondo", None, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_CANCEL, 	
+					gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+
+	dialog.set_default_response(gtk.RESPONSE_OK)
+
+	filter = gtk.FileFilter()
+	filter.set_name("Images")
+	filter.add_mime_type("image/png")
+	filter.add_mime_type("image/jpeg")
+	filter.add_pattern("*.png")
+	filter.add_pattern("*.jpg")
+	dialog.add_filter(filter)
+
+	response = dialog.run()
+	if response == gtk.RESPONSE_OK:
+		if data == "__menu__":
+			BgMenuFile = dialog.get_filename()
+			entryBgMenu.set_text( Process.getFile(BgMenuFile) )
+		else:
+			dirName = cbDir.get_active_text()
+			dictBg[dirName] = dialog.get_filename()
+			dictBgName[dirName] = Process.getFile(dialog.get_filename())
+			entryFrameBg.set_text( dictBgName[dirName] )
+
+	dialog.destroy()
+
+def ClickOpenMusic(widget, data=None):
+	global BgMenuFile
+	global MusicMenuFile
+
+	dialog = gtk.FileChooserDialog("Scegliere la musica", None, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_CANCEL, 	
+					gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+
+	dialog.set_default_response(gtk.RESPONSE_OK)
+
+	filter = gtk.FileFilter()
+	filter.set_name("Audio mp3")
+	filter.add_mime_type("audio/mp3")
+	filter.add_pattern("*.mp3")
+	dialog.add_filter(filter)
+
+	response = dialog.run()
+	if response == gtk.RESPONSE_OK:
+		if data == "__menu__":
+			MusicMenuFile = dialog.get_filename()
+			entryMusicMenu.set_text( Process.getFile(MusicMenuFile) )
+		else:
+			dirName = cbDir.get_active_text()
+			dictMusic[dirName] = dialog.get_filename()
+			dictMusicName[dirName] = Process.getFile(dialog.get_filename())
+			entryFrameMusic.set_text( dictMusicName[dirName] )
+
+	dialog.destroy()
+
+
+def ChangedCbdir(widget):
+	global dictTitle
+	global dictMusic
+	global dictBg
+	global dictMusicName
+	global dictBgName
+
+	dirName = widget.get_active_text()
+	frame.set_label("Directory: " + dirName)
+	entryFrameTitle.set_text(dictTitle[dirName])
+	entryFrameBg.set_text(dictBgName[dirName])
+	entryFrameMusic.set_text(dictMusicName[dirName])
+
+def ChangedFrameTitle(widget):
+	dirName = cbDir.get_active_text()
+	dictTitle[dirName] = entryFrameTitle.get_text()
+	
+
+def readPhotoXML(f):
+	global fileXML
+	if os.path.isfile(fileXML):
+		dom = minidom.parse(fileXML)
+		for node in dom.getElementsByTagName('photo'):
+			if node.attributes["file"].value == f:
+				return [node.attributes["title"].value, node.attributes["comment"].value]
+
+	return ["",""]
+
+# PROGRAMA
+
+if Process.verifyCommands("sox|dvdauthor|ffmpeg|dvd-slideshow|dir2slideshow%dvd-slideshow|mkisofs|mp3info")==False:
+	sys.exit()
+
+# comprobamos si tiene algún directorio seleccionado, sino salimos
+hasDirectories = False
+nDirectories = 0
+directories = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+for directory in directories:
+	if directory != "":
+		if os.path.isdir(directory):
+			hasDirectories = True
+			nDirectories = nDirectories + 1
+
+if hasDirectories==False:
+	Process.alert("Non hai selezionato nessuna cartella")
+	sys.exit()
+
+if nDirectories > 10:
+	Process.alert("Si possono selezionare al massimo 10 cartelle")
+	sys.exit()
+
+w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+w.set_title("DVD di Fotografie")
+w.set_border_width(20)
+
+w.connect("destroy", gtk.mainquit) 
+
+# pestañas
+
+notebook = gtk.Notebook()
+
+# tabla principal
+
+tableMain = gtk.Table(2, 1, False)
+tableMain.set_border_width(10)
+
+tableMain.set_row_spacings(8)
+tableMain.set_col_spacings(8)
+
+
+lTitulo = gtk.Label("Titolo:")
+
+tableMain.attach(lTitulo, 0, 1, 0, 1)
+
+entryTitulo = gtk.Entry()
+
+tableMain.attach(entryTitulo, 1, 3, 0, 1)
+
+lBgMenu = gtk.Label("Sfondo menu:")
+tableMain.attach(lBgMenu, 0, 1, 1, 2)
+entryBgMenu = gtk.Entry()
+entryBgMenu.set_sensitive(False)
+tableMain.attach(entryBgMenu, 1, 2, 1, 2)
+bBgMenu = gtk.Button("", gtk.STOCK_OPEN)
+bBgMenu.connect("clicked", ClickOpenBg, "__menu__")
+tableMain.attach(bBgMenu, 2, 3, 1, 2)
+
+lMusicMenu = gtk.Label("Musica menu:")
+tableMain.attach(lMusicMenu, 0, 1, 2, 3)
+entryMusicMenu = gtk.Entry()
+entryMusicMenu.set_sensitive(False)
+tableMain.attach(entryMusicMenu, 1, 2, 2, 3)
+bMusicMenu = gtk.Button("", gtk.STOCK_OPEN)
+bMusicMenu.connect("clicked", ClickOpenMusic, "__menu__")
+tableMain.attach(bMusicMenu, 2, 3, 2, 3)
+
+cbPhotoMenu = gtk.CheckButton("Mostra 4 immagini formato polaroid alla destra del menu")
+
+cbPhotoMenu.set_active(True)
+
+tableMain.attach(cbPhotoMenu, 0, 2, 3, 4)
+
+cbNTitle = gtk.CheckButton("Inserire numero della foto davanti al titolo")
+
+cbNTitle.set_active(False)
+
+tableMain.attach(cbNTitle, 0, 2, 4, 5)
+
+cbNPhotos = gtk.CheckButton("Inserire il numero delle immagini nel titolo")
+
+cbNPhotos.set_active(True)
+
+tableMain.attach(cbNPhotos, 0, 2, 5, 6)
+
+lMain = gtk.Label("Menu")
+
+notebook.insert_page(tableMain, lMain)
+
+# tabla albumes
+
+tableAlbums = gtk.Table(2, 1, False)
+tableAlbums.set_border_width(10)
+
+tableAlbums.set_row_spacings(20)
+tableAlbums.set_col_spacings(20)
+
+# creamos las cajas de cada una de las .vob
+
+#lDir = gtk.Label("Modificar directorio:")
+#tableAlbums.attach(lDir, 0, 1, 0, 1)
+cbDir = gtk.combo_box_new_text()
+cbDir.connect('changed', ChangedCbdir)
+tableAlbums.attach(cbDir, 0, 1, 0, 1)
+
+sw = 1
+dirMain = ""
+directories = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+for directory in directories:
+	if directory != "":
+		if os.path.isdir(directory):
+			dirName = Process.getFile(directory)
+			cbDir.append_text(dirName)
+			dictTitle[dirName] = dirName
+			dictBg[dirName] = ""
+			dictBgName[dirName] = ""
+			files = os.listdir(directory)
+			music = ""
+			musicPath = ""
+			for f in files:
+				if Process.getExtension(f)=="MP3":
+					music = f
+					musicPath = directory + "/" + f
+					break
+			dictMusic[dirName] = musicPath
+			dictMusicName[dirName] = music
+			if sw == 1:
+				dirMain	= dirName
+				sw = 0		
+		else:
+			Process.alert(directory+" non è una cartella")
+
+cbDir.set_active(0)
+
+# frame
+frame = gtk.Frame("Directory: " + dirMain)
+
+tableFrame = gtk.Table(2, 3, False)
+tableFrame.set_border_width(6)
+
+tableFrame.set_row_spacings(10)
+tableFrame.set_col_spacings(10)
+
+lFrameTitle = gtk.Label("Titolo:")
+tableFrame.attach(lFrameTitle, 0, 1, 0, 1)
+entryFrameTitle = gtk.Entry()
+entryFrameTitle.set_text(dirMain)
+entryFrameTitle.connect('changed', ChangedFrameTitle)
+tableFrame.attach(entryFrameTitle, 1, 3, 0, 1)
+
+lFrameBg = gtk.Label("Sfondo:")
+tableFrame.attach(lFrameBg, 0, 1, 1, 2)
+entryFrameBg = gtk.Entry()
+entryFrameBg.set_sensitive(False)
+tableFrame.attach(entryFrameBg, 1, 2, 1, 2)
+bFrameBg = gtk.Button("", gtk.STOCK_OPEN)
+bFrameBg.connect("clicked", ClickOpenBg, "__dir__")
+tableFrame.attach(bFrameBg, 2, 3, 1, 2)
+
+lFrameMusic = gtk.Label("Musica:")
+tableFrame.attach(lFrameMusic, 0, 1, 2, 3)
+entryFrameMusic = gtk.Entry()
+entryFrameMusic.set_sensitive(False)
+entryFrameMusic.set_text(dictMusicName[dirMain])
+tableFrame.attach(entryFrameMusic, 1, 2, 2, 3)
+bFrameMusic = gtk.Button("", gtk.STOCK_OPEN)
+bFrameMusic.connect("clicked", ClickOpenMusic, "__dir__")
+tableFrame.attach(bFrameMusic, 2, 3, 2, 3)
+
+frame.add(tableFrame)
+
+tableAlbums.attach(frame, 0, 1, 1, 2, gtk.EXPAND|gtk.FILL|gtk.SHRINK)
+
+lAlbums = gtk.Label("Albums")
+
+notebook.insert_page(tableAlbums, lAlbums)
+
+# tabla otros
+
+tableOthers = gtk.Table(2, 2, False)
+tableOthers.set_border_width(10)
+
+tableOthers.set_row_spacings(8)
+tableOthers.set_col_spacings(8)
+
+lSegundosImagen = gtk.Label("Seconda immagine:")
+
+tableOthers.attach(lSegundosImagen, 0, 1, 0, 1)
+
+adjSegundosImagen = gtk.Adjustment(1.0, 1.0, 20.0, 1.0, 5.0, 0.0)
+spinSegundosImagen = gtk.SpinButton(adjSegundosImagen, 0, 0)
+spinSegundosImagen.set_value(5)
+
+tableOthers.attach(spinSegundosImagen, 1, 3, 0, 1)
+
+lTransImagen = gtk.Label("Seconda transizione:")
+
+tableOthers.attach(lTransImagen, 0, 1, 1, 2)
+
+adjTransImagen = gtk.Adjustment(1.0, 1.0, 10.0, 1.0, 5.0, 0.0)
+spinTransImagen = gtk.SpinButton(adjTransImagen, 0, 0)
+spinTransImagen.set_value(2)
+
+tableOthers.attach(spinTransImagen, 1, 3, 1, 2)
+
+cbComment = gtk.CheckButton("Inserire commenti nelle foto")
+
+cbComment.set_active(True);
+
+tableOthers.attach(cbComment, 0, 2, 2, 3)
+
+lComment = gtk.Label("I commenti devono essere inseriti prima di utilizare questo programma.\nPer fare questo è possibile utilizzare lo script apposito ")
+
+tableOthers.attach(lComment, 1, 2, 3, 4)
+
+cbDelete = gtk.CheckButton("Cancellare tutte le cartelle al termine")
+
+cbDelete.set_active(True);
+
+tableOthers.attach(cbDelete, 0, 2, 4, 5)
+
+lComment = gtk.Label("Foto")
+
+notebook.insert_page(tableOthers, lComment)
+
+# botones
+
+aligButtons = gtk.Alignment(1.0, 0.0)
+boxButtons = gtk.HBox(True, 4)
+
+bHelp = gtk.Button("Aiuto", gtk.STOCK_HELP)
+
+bHelp.connect("clicked", ClickHelp)
+
+boxButtons.pack_start(bHelp, False, False, 0)
+
+bCancel = gtk.Button("Annullare", gtk.STOCK_CANCEL)
+
+bCancel.connect("clicked", ClickCancel)
+
+boxButtons.pack_start(bCancel, False, False, 0)
+
+bAccept = gtk.Button("Accettare", gtk.STOCK_OK)
+
+bAccept.connect("clicked", ClickAccept)
+
+boxButtons.pack_start(bAccept, False, False, 0)
+
+aligButtons.add(boxButtons)
+
+
+vbox = gtk.VBox(gtk.FALSE, 0)
+vbox.set_border_width(0)
+
+vbox.pack_start(notebook, True, True, 4)
+vbox.pack_start(aligButtons, False, True, 4)
+
+
+w.add(vbox)
+w.show_all()
+gtk.main()

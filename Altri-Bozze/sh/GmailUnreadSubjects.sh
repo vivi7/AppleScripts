@@ -1,0 +1,1 @@
+curl -u username@gmail.com:Google-password --silent "https://mail.google.com/mail/feed/atom" | grep -a "title" | grep -v 'Gmail - Inbox for' | sed -e "s/\<title>//g" | sed -e :a -e 's/<[^>]*>//g;/</N;//ba'

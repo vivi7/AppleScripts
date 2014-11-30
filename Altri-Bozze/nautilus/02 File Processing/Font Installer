@@ -1,0 +1,30 @@
+#!/bin/bash
+
+##########################################################################
+# Font Installer
+##########################################################################
+#                                                                        #
+# Created by Mattia Galati (Adaron)                                      #
+# first improvement and translation by Christopher Bratusek (Chrispy)    #
+#                                                                        #
+##########################################################################
+# Language Settings ---------------------------------------------------- #
+wait='Attendere: aggiornamento dei fonts in corso...'
+title_wait='Completamento'
+
+errors='Si sono verificati degli errori'
+title_errors='Errore'
+
+# End of language settings ----------------------------------------------#
+##########################################################################
+
+if [[ ! -a "~/.fonts" ]]; then
+	mkdir -p ~/.fonts
+fi
+
+cp $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS ~/.fonts
+
+if (( $? == 0 )); then
+	fc-cache -fv | zenity --progress --pulsate --title "$title_wait" --text "$wait";
+else	zenity --info --text "$errors" --title "$title_errors";
+fi

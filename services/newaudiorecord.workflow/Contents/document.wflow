@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AMApplicationBuild</key>
+	<string>346</string>
+	<key>AMApplicationVersion</key>
+	<string>2.3</string>
+	<key>AMDocumentVersion</key>
+	<string>2</string>
+	<key>actions</key>
+	<array>
+		<dict>
+			<key>action</key>
+			<dict>
+				<key>AMAccepts</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Optional</key>
+					<true/>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>AMActionVersion</key>
+				<string>7.7.1</string>
+				<key>AMApplication</key>
+				<array>
+					<string>QuickTime Player</string>
+				</array>
+				<key>AMParameterProperties</key>
+				<dict/>
+				<key>AMProvides</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>AMRequiredResources</key>
+				<array/>
+				<key>ActionBundlePath</key>
+				<string>/System/Library/Automator/New Audio Capture.action</string>
+				<key>ActionName</key>
+				<string>Nuova acquisizione audio</string>
+				<key>ActionParameters</key>
+				<dict/>
+				<key>BundleIdentifier</key>
+				<string>com.apple.NewAudioCapture</string>
+				<key>CFBundleVersion</key>
+				<string>7.7.1</string>
+				<key>CanShowSelectedItemsWhenRun</key>
+				<true/>
+				<key>CanShowWhenRun</key>
+				<true/>
+				<key>Category</key>
+				<array>
+					<string>AMCategoryMovies</string>
+				</array>
+				<key>Class Name</key>
+				<string>AMAppleScriptAction</string>
+				<key>InputUUID</key>
+				<string>3816277C-8843-477C-8EC3-292DB57A27B5</string>
+				<key>Keywords</key>
+				<array>
+					<string>QuickTime</string>
+					<string>Filmato</string>
+					<string>Acquisisci</string>
+					<string>Audio</string>
+				</array>
+				<key>OutputUUID</key>
+				<string>C4EC122B-4F96-48B5-AE03-FDBF663B038B</string>
+				<key>UUID</key>
+				<string>7CFE8D6B-E680-4C68-8C2A-767A8FBBD96F</string>
+				<key>UnlocalizedApplications</key>
+				<array>
+					<string>QuickTime Player</string>
+				</array>
+				<key>arguments</key>
+				<dict/>
+				<key>nibPath</key>
+				<string>/System/Library/Automator/New Audio Capture.action/Contents/Resources/Italian.lproj/main.nib</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>action</key>
+			<dict>
+				<key>AMAccepts</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Optional</key>
+					<true/>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>AMActionVersion</key>
+				<string>7.7.1</string>
+				<key>AMApplication</key>
+				<array>
+					<string>QuickTime Player</string>
+				</array>
+				<key>AMParameterProperties</key>
+				<dict>
+					<key>waitForCompletion</key>
+					<dict/>
+				</dict>
+				<key>AMProvides</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>AMRequiredResources</key>
+				<array/>
+				<key>ActionBundlePath</key>
+				<string>/System/Library/Automator/Start Capture.action</string>
+				<key>ActionName</key>
+				<string>Inizia l'acquisizione</string>
+				<key>ActionParameters</key>
+				<dict>
+					<key>waitForCompletion</key>
+					<false/>
+				</dict>
+				<key>BundleIdentifier</key>
+				<string>com.apple.StartCapture</string>
+				<key>CFBundleVersion</key>
+				<string>7.7.1</string>
+				<key>CanShowSelectedItemsWhenRun</key>
+				<true/>
+				<key>CanShowWhenRun</key>
+				<true/>
+				<key>Category</key>
+				<array>
+					<string>AMCategoryMovies</string>
+				</array>
+				<key>Class Name</key>
+				<string>AMAppleScriptAction</string>
+				<key>InputUUID</key>
+				<string>24BC936D-C3E4-40BF-A42D-9BD6A616BBBD</string>
+				<key>Keywords</key>
+				<array>
+					<string>QuickTime</string>
+					<string>Filmato</string>
+					<string>Acquisisci</string>
+					<string>Avvia</string>
+				</array>
+				<key>OutputUUID</key>
+				<string>3FC13E0A-148B-4066-ABD8-A7C64A41CCD8</string>
+				<key>UUID</key>
+				<string>84F51A6F-666F-4C50-88B6-19FD16AC9558</string>
+				<key>UnlocalizedApplications</key>
+				<array>
+					<string>QuickTime Player</string>
+				</array>
+				<key>arguments</key>
+				<dict>
+					<key>0</key>
+					<dict>
+						<key>default value</key>
+						<false/>
+						<key>name</key>
+						<string>waitForCompletion</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>0</string>
+					</dict>
+				</dict>
+				<key>isViewVisible</key>
+				<true/>
+				<key>location</key>
+				<string>367.500000:389.000000</string>
+				<key>nibPath</key>
+				<string>/System/Library/Automator/Start Capture.action/Contents/Resources/Italian.lproj/main.nib</string>
+			</dict>
+			<key>isViewVisible</key>
+			<true/>
+		</dict>
+	</array>
+	<key>connectors</key>
+	<dict>
+		<key>85787377-8DFD-446C-8925-0C3D58AF9F07</key>
+		<dict>
+			<key>from</key>
+			<string>7CFE8D6B-E680-4C68-8C2A-767A8FBBD96F - 7CFE8D6B-E680-4C68-8C2A-767A8FBBD96F</string>
+			<key>to</key>
+			<string>84F51A6F-666F-4C50-88B6-19FD16AC9558 - 84F51A6F-666F-4C50-88B6-19FD16AC9558</string>
+		</dict>
+	</dict>
+	<key>workflowMetaData</key>
+	<dict>
+		<key>serviceInputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>serviceOutputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>serviceProcessesInput</key>
+		<integer>0</integer>
+		<key>workflowTypeIdentifier</key>
+		<string>com.apple.Automator.servicesMenu</string>
+	</dict>
+</dict>
+</plist>

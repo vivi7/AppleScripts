@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import Process
+
+if Process.verifyCommands("lame")==False:
+	sys.exit()
+
+Process.ProcessFiles(
+	"lame -h -m j $FILE$ $NAME$.mp3", # comando a ejecutar
+	"wav", # tipo de archivos
+	True, # leer directorios?
+	False, # procesar directorio como un archivo
+	"") # mensaje final

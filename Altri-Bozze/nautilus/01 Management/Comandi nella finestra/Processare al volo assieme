@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import gtk
+import os
+import string
+
+import Process
+
+def ClickAccept(widget):
+	global eCommand
+	Process.ProcessTogetherFiles(eCommand.get_text(), "", "")
+	gtk.main_quit()
+
+
+def ClickCancel(widget):
+	gtk.main_quit()
+
+def ClickFiles(widget):
+	insertTextInCommand("$FILES$")	
+
+def insertTextInCommand(text):
+	global eCommand
+
+	pos = eCommand.get_property("cursor-position")
+
+	eCommand.insert_text(text, pos)
+
+	eCommand.grab_focus()
+
+	eCommand.select_region(pos+len(text), pos+len(text))
+
+
+# PROGRAM
+
+w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+w.set_title("Processare al volo assieme")
+w.set_border_width(10)
+#w.set_size_request(500, 200)
+
+w.connect("destroy", gtk.mainquit) 
+
+# table
+
+table = gtk.Table(2, 4, False)
+table.set_border_width(10)
+
+table.set_row_spacings(8)
+table.set_col_spacings(8)
+
+lCommand = gtk.Label("Comando:")
+
+table.attach(lCommand, 0, 1, 0, 1)
+
+eCommand = gtk.Entry()
+eCommand.set_width_chars(50)
+
+table.attach(eCommand, 1, 2, 0, 1)
+
+# buttons
+
+aligButtonsTexts = gtk.Alignment(0.0, 0.0)
+boxButtonsTexts = gtk.HBox(True, 4)
+
+bFile = gtk.Button("FILES")
+
+bFile.connect("clicked", ClickFiles)
+
+boxButtonsTexts.pack_start(bFile, False, False, 0)
+
+
+aligButtonsTexts.add(boxButtonsTexts)
+
+table.attach(aligButtonsTexts, 1, 2, 1, 2)
+
+
+# buttons
+
+aligButtons = gtk.Alignment(1.0, 0.0)
+boxButtons = gtk.HBox(True, 4)
+
+bAccept = gtk.Button("Accettare", gtk.STOCK_OK)
+
+bAccept.connect("clicked", ClickAccept)
+
+boxButtons.pack_start(bAccept, False, False, 0)
+
+bCancel = gtk.Button("Annullare", gtk.STOCK_CANCEL)
+
+bCancel.connect("clicked", ClickCancel)
+
+boxButtons.pack_start(bCancel, False, False, 0)
+
+aligButtons.add(boxButtons)
+
+table.attach(aligButtons, 1, 2, 2, 3)
+
+w.add(table)
+w.show_all()
+gtk.main()

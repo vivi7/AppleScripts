@@ -1,0 +1,133 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import gtk
+import os
+import string
+
+import Process
+
+def ClickAccept(widget):
+	global eCommand
+	global cbTodoDirectory
+	global cbExeDirectory
+	Process.ProcessFiles(eCommand.get_text(), "", cbTodoDirectory.get_active(), cbExeDirectory.get_active(), "")
+	gtk.main_quit()
+
+
+def ClickCancel(widget):
+	gtk.main_quit()
+
+def ClickFile(widget):
+	insertTextInCommand("$FILE$")	
+
+def ClickExt(widget):
+	insertTextInCommand("$EXT$")	
+
+def ClickName(widget):
+	insertTextInCommand("$NAME$")	
+
+def insertTextInCommand(text):
+	global eCommand
+
+	pos = eCommand.get_property("cursor-position")
+
+	eCommand.insert_text(text, pos)
+
+	eCommand.grab_focus()
+
+	eCommand.select_region(pos+len(text), pos+len(text))
+
+
+# PROGRAM
+
+w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+w.set_title("Processare al volo uno per uno")
+w.set_border_width(10)
+#w.set_size_request(500, 200)
+
+w.connect("destroy", gtk.mainquit) 
+
+# table
+
+table = gtk.Table(2, 4, False)
+table.set_border_width(10)
+
+table.set_row_spacings(8)
+table.set_col_spacings(8)
+
+lCommand = gtk.Label("Comando:")
+
+table.attach(lCommand, 0, 1, 0, 1)
+
+eCommand = gtk.Entry()
+eCommand.set_width_chars(50)
+
+table.attach(eCommand, 1, 2, 0, 1)
+
+# buttons
+
+aligButtonsTexts = gtk.Alignment(0.0, 0.0)
+boxButtonsTexts = gtk.HBox(True, 4)
+
+bFile = gtk.Button("FILE")
+
+bFile.connect("clicked", ClickFile)
+
+boxButtonsTexts.pack_start(bFile, False, False, 0)
+
+bName = gtk.Button("NAME")
+
+bName.connect("clicked", ClickName)
+
+boxButtonsTexts.pack_start(bName, False, False, 0)
+
+bExt = gtk.Button("EXT")
+
+bExt.connect("clicked", ClickExt)
+
+boxButtonsTexts.pack_start(bExt, False, False, 0)
+
+aligButtonsTexts.add(boxButtonsTexts)
+
+table.attach(aligButtonsTexts, 1, 2, 1, 2)
+
+# checkboxs
+
+cbTodoDirectory = gtk.CheckButton("Entrar dentro de los directorios")
+
+cbTodoDirectory.set_active(True);
+
+table.attach(cbTodoDirectory, 0, 2, 2, 3)
+
+cbExeDirectory = gtk.CheckButton("Ejecutar comando al directorio")
+
+cbExeDirectory.set_active(False);
+
+table.attach(cbExeDirectory, 0, 2, 3, 4)
+
+
+# buttons
+
+aligButtons = gtk.Alignment(1.0, 0.0)
+boxButtons = gtk.HBox(True, 4)
+
+bAccept = gtk.Button("Accettare", gtk.STOCK_OK)
+
+bAccept.connect("clicked", ClickAccept)
+
+boxButtons.pack_start(bAccept, False, False, 0)
+
+bCancel = gtk.Button("Annullare", gtk.STOCK_CANCEL)
+
+bCancel.connect("clicked", ClickCancel)
+
+boxButtons.pack_start(bCancel, False, False, 0)
+
+aligButtons.add(boxButtons)
+
+table.attach(aligButtons, 1, 2, 4, 5)
+
+w.add(table)
+w.show_all()
+gtk.main()

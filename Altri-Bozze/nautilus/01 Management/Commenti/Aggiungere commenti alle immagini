@@ -1,0 +1,246 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import Process
+
+import gtk
+import os
+import sys
+import string
+
+from xml.dom import minidom
+
+dirPath = ""
+fileXML = ""
+nPhotosWithoutInfo = 0
+nPhoto = 0
+
+
+def ClickCancel(widget):
+	gtk.main_quit()
+
+def ClickImage(widget, f=None):
+
+	global nPhotosWithoutInfo
+
+	if f == None:
+		return
+	
+	dialog = gtk.Dialog("Modificare i dati dell'immagine", w, 0, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_REMOVE, gtk.RESPONSE_NO))
+	dialog.set_border_width(4)
+
+	dialog.set_default_size(360,100)
+
+	data = readPhotoXML(f)
+		
+	table = gtk.Table(2, 2, False)
+	table.set_row_spacings(8)
+	table.set_col_spacings(8)
+		
+	lTitle = gtk.Label("Titolo")
+	table.attach_defaults(lTitle, 0, 1, 0, 1)
+
+	eTitle = gtk.Entry()
+	eTitle.set_text(data[0])
+	table.attach_defaults(eTitle, 1, 2, 0, 1)
+
+	lComment = gtk.Label("Commento")
+	table.attach_defaults(lComment, 0, 1, 1, 2)
+		
+	eComment = gtk.Entry()
+	eComment.set_text(data[1])
+	table.attach_defaults(eComment, 1, 2, 1, 2)
+		
+	dialog.vbox.pack_start(table, gtk.FALSE, gtk.FALSE, 0)
+		
+	dialog.show_all()
+		
+	respuesta = dialog.run()
+		
+	if respuesta == gtk.RESPONSE_OK:
+		newNode = True
+		dom = minidom.parse(fileXML)
+		if eTitle.get_text() == "" and eComment.get_text() == "":
+			for node in dom.getElementsByTagName('photo'):
+				if node.attributes["file"].value == f:
+					node.parentNode.removeChild(node)
+					tooltips.set_tip(widget, "Senza dati")
+					nPhotosWithoutInfo = nPhotosWithoutInfo + 1
+					labelComent.set_label(getTextInfo())
+					widget.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(35535,0,0))
+					widget.show()
+		else:
+			for node in dom.getElementsByTagName('photo'):
+				if node.attributes["file"].value == f:
+					newNode = False
+					node.attributes["title"].value = eTitle.get_text()
+					node.attributes["comment"].value = eComment.get_text()
+
+			if newNode == True:
+				nodePhoto = dom.createElement("photo")
+				nodePhoto.setAttribute("file", f)
+				nodePhoto.setAttribute("title", eTitle.get_text())
+				nodePhoto.setAttribute("comment", eComment.get_text())
+				dom.childNodes[0].appendChild(nodePhoto)
+				nPhotosWithoutInfo = nPhotosWithoutInfo - 1
+				labelComent.set_label(getTextInfo())
+				widget.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0,35535,0))
+				widget.show()
+
+			tooltips.set_tip(widget, "Titolo: " + eTitle.get_text() + "\nCommento: " + eComment.get_text()[0:15] + "...")
+
+		saveXML(dom.toxml())
+
+	if respuesta == gtk.RESPONSE_NO:
+		dom = minidom.parse(fileXML)
+		for node in dom.getElementsByTagName('photo'):
+			if node.attributes["file"].value == f:
+				node.parentNode.removeChild(node)
+				tooltips.set_tip(widget, "Senza dati")
+				nPhotosWithoutInfo = nPhotosWithoutInfo + 1
+				labelComent.set_label(getTextInfo())
+				widget.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(35535,0,0))
+				widget.show()
+
+		saveXML(dom.toxml())
+
+	dialog.destroy()
+	
+
+def ClickHelp(widget):
+	Process.alert("Questo script ci servirà per inserire Titoli e Commenti\n"+
+			"a immagini che successivamente saranno usate con altri\n"
+			"scripts come Creare DVD o Creare mosaico polaroids\n"
+			"Lo script è stato creato da Javier Perez Pacheco\n"+
+			"http://www.javielinux.com/")
+
+
+def readPhotoXML(f):
+	global fileXML
+	if os.path.isfile(fileXML):
+		dom = minidom.parse(fileXML)
+		for node in dom.getElementsByTagName('photo'):
+			if node.attributes["file"].value == f:
+				return [node.attributes["title"].value, node.attributes["comment"].value]
+
+	return ["",""]
+
+def saveXML(strXml):
+	xml = open(fileXML, 'w')
+	xml.write(strXml)
+	xml.close()
+
+def getTextInfo():
+	return "Ci sono " + str(nPhoto) + " immagini nella cartella, " + str(nPhotosWithoutInfo) + " senza commenti"
+
+# PROGRAMA
+
+if Process.verifyCommands("convert%ImageMagick")==False:
+	sys.exit()
+
+dirPath = Process.getCurrentDirectory()
+
+# creamos XML si no existe
+
+fileXML = dirPath+"/"+".comments_nautilus.xml"
+
+if not os.path.isfile(fileXML):
+	saveXML("""<?xml version="1.0" encoding="iso-8859-1"?>
+<photos>
+</photos>""")
+
+
+# ventana
+
+w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+w.set_title("Aggiungere commenti alle immagini")
+w.set_border_width(8)
+w.set_default_size(600,500)
+
+w.connect("destroy", gtk.mainquit) 
+
+# tabla de la miniatura
+
+tableMin = gtk.Table(4, 4, True)
+tableMin.set_border_width(4)
+
+tableMin.set_row_spacings(8)
+tableMin.set_col_spacings(8)
+
+sw = gtk.ScrolledWindow()
+sw.set_border_width(10)
+
+sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+
+sw.show()
+
+# creamos la tabla de imágenes
+
+#files = os.listdir(dirPath)
+row = -1
+
+tooltips = gtk.Tooltips()
+
+directories = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].split("\n")
+
+for f in directories:
+	if Process.getExtension(f)=="JPG" or Process.getExtension(f)=="PNG":
+		filePath = f
+		pb = gtk.gdk.pixbuf_new_from_file( filePath )
+		pb = pb.scale_simple(70, 70, gtk.gdk.INTERP_NEAREST)
+		image = gtk.Image()
+		image.set_from_pixbuf(pb)
+		image.show()
+		b = gtk.Button()
+		b.add(image)
+		data = readPhotoXML(Process.getFile(f))
+		if data[0]=="" and data[1]=="":
+			tooltips.set_tip(b, "Senza dati")
+			nPhotosWithoutInfo = nPhotosWithoutInfo + 1
+			b.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(35535,0,0))
+		else:
+			tooltips.set_tip(b, "Titolo: " + data[0] + "\nCommento: " + data[1][0:15] + "...")
+			b.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0,35535,0))
+		b.connect("clicked", ClickImage, Process.getFile(f))
+		b.show()
+		col = nPhoto % 5
+		if col == 0:
+			row = row + 1
+		tableMin.attach(b, col, col+1, row, row+1)
+		nPhoto = nPhoto + 1
+
+sw.add_with_viewport(tableMin)
+
+# botones
+
+aligButtons = gtk.Alignment(1.0, 0.0)
+boxButtons = gtk.HBox(True, 4)
+
+bHelp = gtk.Button("Aiuto", gtk.STOCK_HELP)
+
+bHelp.connect("clicked", ClickHelp)
+
+boxButtons.pack_start(bHelp, False, False, 0)
+
+bCancel = gtk.Button("Chiudere", gtk.STOCK_CLOSE)
+
+bCancel.connect("clicked", ClickCancel)
+
+boxButtons.pack_start(bCancel, False, False, 0)
+
+aligButtons.add(boxButtons)
+
+#row = row + 1
+
+labelComent = gtk.Label(getTextInfo())
+
+vbox = gtk.VBox(gtk.FALSE, 0)
+vbox.set_border_width(4)
+
+vbox.pack_start(labelComent, False, True, 0)
+vbox.pack_start(sw, True, True, 0)
+vbox.pack_start(aligButtons, False, True, 0)
+
+w.add(vbox)
+w.show_all()
+gtk.main()
