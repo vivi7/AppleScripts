@@ -13,22 +13,11 @@
 		<dict>
 			<key>action</key>
 			<dict>
-				<key>AMAccepts</key>
-				<dict>
-					<key>Container</key>
-					<string>List</string>
-					<key>Optional</key>
-					<true/>
-					<key>Types</key>
-					<array>
-						<string>com.apple.cocoa.path</string>
-					</array>
-				</dict>
 				<key>AMActionVersion</key>
-				<string>2.1.1</string>
+				<string>1.0</string>
 				<key>AMApplication</key>
 				<array>
-					<string>Finder</string>
+					<string>Foto</string>
 				</array>
 				<key>AMParameterProperties</key>
 				<dict/>
@@ -38,146 +27,62 @@
 					<string>List</string>
 					<key>Types</key>
 					<array>
-						<string>com.apple.cocoa.path</string>
+						<string>com.apple.photos.mediaitem-object</string>
 					</array>
 				</dict>
 				<key>AMRequiredResources</key>
-				<array/>
+				<array>
+					<dict>
+						<key>Display Name</key>
+						<string>Photos</string>
+						<key>Resource</key>
+						<string>com.apple.Photos</string>
+						<key>Type</key>
+						<string>application</string>
+						<key>Version</key>
+						<string>1.0</string>
+					</dict>
+				</array>
 				<key>ActionBundlePath</key>
-				<string>/System/Library/Automator/Get Selected Finder Items 2.action</string>
+				<string>/Library/Automator/PHOTOS-Get Selected Photos Items.action</string>
 				<key>ActionName</key>
-				<string>Ottieni elementi Finder selezionati</string>
+				<string>Get Selected Photos Items</string>
 				<key>ActionParameters</key>
 				<dict/>
 				<key>BundleIdentifier</key>
-				<string>com.apple.Automator.Get_Selected_Finder_Items_2</string>
+				<string>com.apple.Photos.PHOTOS-Get-Selected-Photos-Items</string>
 				<key>CFBundleVersion</key>
-				<string>2.1.1</string>
+				<string>1.0</string>
 				<key>CanShowSelectedItemsWhenRun</key>
 				<false/>
 				<key>CanShowWhenRun</key>
-				<true/>
+				<false/>
 				<key>Category</key>
 				<array>
-					<string>AMCategoryFilesAndFolders</string>
+					<string>AMCategoryPhotos</string>
 				</array>
 				<key>Class Name</key>
-				<string>AMGetSelectedFinderItemsAction</string>
-				<key>InputUUID</key>
-				<string>CBD514DF-E49B-4722-BB80-6BF8744359CB</string>
+				<string>Get_Selection</string>
 				<key>Keywords</key>
-				<array/>
+				<array>
+					<string>photo</string>
+					<string>image</string>
+				</array>
 				<key>OutputUUID</key>
-				<string>352D2E4E-C616-4380-BB29-BEBED02A6E81</string>
+				<string>BB9F7521-B9DF-45E6-BCEA-49DA434767E3</string>
 				<key>UUID</key>
-				<string>1BEDC7D2-B7E1-4243-BCFC-E3BCE0AEFFC4</string>
+				<string>B1E2BD5A-6A28-4260-82C4-2259A0081F57</string>
 				<key>UnlocalizedApplications</key>
 				<array>
-					<string>Finder</string>
+					<string>Photos</string>
 				</array>
 				<key>arguments</key>
 				<dict/>
-			</dict>
-		</dict>
-		<dict>
-			<key>action</key>
-			<dict>
-				<key>AMAccepts</key>
-				<dict>
-					<key>Container</key>
-					<string>List</string>
-					<key>Optional</key>
-					<false/>
-					<key>Types</key>
-					<array>
-						<string>com.apple.cocoa.path</string>
-					</array>
-				</dict>
-				<key>AMActionVersion</key>
-				<string>1.0.2</string>
-				<key>AMApplication</key>
-				<array>
-					<string>Finder</string>
-				</array>
-				<key>AMParameterProperties</key>
-				<dict>
-					<key>recurse</key>
-					<dict/>
-				</dict>
-				<key>AMProvides</key>
-				<dict>
-					<key>Container</key>
-					<string>List</string>
-					<key>Types</key>
-					<array>
-						<string>com.apple.cocoa.path</string>
-					</array>
-				</dict>
-				<key>AMRequiredResources</key>
-				<array/>
-				<key>ActionBundlePath</key>
-				<string>/System/Library/Automator/Get Folder Contents.action</string>
-				<key>ActionName</key>
-				<string>Ottieni contenuto cartella</string>
-				<key>ActionParameters</key>
-				<dict>
-					<key>recurse</key>
-					<true/>
-				</dict>
-				<key>BundleIdentifier</key>
-				<string>com.apple.Automator.GetFolderContents</string>
-				<key>CFBundleVersion</key>
-				<string>1.0.2</string>
-				<key>CanShowSelectedItemsWhenRun</key>
-				<true/>
-				<key>CanShowWhenRun</key>
-				<true/>
-				<key>Category</key>
-				<array>
-					<string>AMCategoryFilesAndFolders</string>
-				</array>
-				<key>Class Name</key>
-				<string>GetFolderContents</string>
-				<key>InputUUID</key>
-				<string>E746D8E7-3FFC-4F2C-A050-F7E1F4AE7695</string>
-				<key>Keywords</key>
-				<array>
-					<string>File</string>
-					<string>Cartella</string>
-				</array>
-				<key>OutputUUID</key>
-				<string>223B71D9-333A-4BDA-8EBA-201CE5154DB3</string>
-				<key>UUID</key>
-				<string>06EFF889-41CE-4795-9459-DDD0824BF9C9</string>
-				<key>UnlocalizedApplications</key>
-				<array>
-					<string>Finder</string>
-				</array>
-				<key>arguments</key>
-				<dict>
-					<key>0</key>
-					<dict>
-						<key>default value</key>
-						<false/>
-						<key>name</key>
-						<string>recurse</string>
-						<key>required</key>
-						<string>0</string>
-						<key>type</key>
-						<string>0</string>
-						<key>uuid</key>
-						<string>0</string>
-					</dict>
-				</dict>
-				<key>isViewVisible</key>
-				<true/>
-				<key>location</key>
-				<string>449.000000:168.000000</string>
+				<key>conversionLabel</key>
+				<integer>0</integer>
 				<key>nibPath</key>
-				<string>/System/Library/Automator/Get Folder Contents.action/Contents/Resources/Base.lproj/main.nib</string>
+				<string>/Library/Automator/PHOTOS-Get Selected Photos Items.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
-			<key>isViewVisible</key>
-			<true/>
 		</dict>
 		<dict>
 			<key>action</key>
@@ -360,7 +265,7 @@
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>449.000000:533.000000</string>
+				<string>449.000000:433.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Filter Finder Items 2.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -513,7 +418,7 @@
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>449.000000:818.000000</string>
+				<string>449.000000:538.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Scale Images.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -523,26 +428,19 @@
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>0FC1F1AD-2B94-4192-842E-372623374D5E</key>
+		<key>9E5F31AB-B692-474E-80A6-4EA9DE8AACFB</key>
+		<dict>
+			<key>from</key>
+			<string>B1E2BD5A-6A28-4260-82C4-2259A0081F57 - B1E2BD5A-6A28-4260-82C4-2259A0081F57</string>
+			<key>to</key>
+			<string>49CF4862-3958-4700-9073-6681750E8DE6 - 49CF4862-3958-4700-9073-6681750E8DE6</string>
+		</dict>
+		<key>D1C474E2-D875-4B16-A5C0-40B1F58C1B71</key>
 		<dict>
 			<key>from</key>
 			<string>49CF4862-3958-4700-9073-6681750E8DE6 - 49CF4862-3958-4700-9073-6681750E8DE6</string>
 			<key>to</key>
 			<string>9D03BCCC-5CD4-42D7-8343-444B91942F30 - 9D03BCCC-5CD4-42D7-8343-444B91942F30</string>
-		</dict>
-		<key>946B4DE8-0586-4A0D-91DB-A0D4963236DD</key>
-		<dict>
-			<key>from</key>
-			<string>1BEDC7D2-B7E1-4243-BCFC-E3BCE0AEFFC4 - 1BEDC7D2-B7E1-4243-BCFC-E3BCE0AEFFC4</string>
-			<key>to</key>
-			<string>06EFF889-41CE-4795-9459-DDD0824BF9C9 - 06EFF889-41CE-4795-9459-DDD0824BF9C9</string>
-		</dict>
-		<key>A3E2C4C8-BA5C-488F-AF1C-CDD2E07EB108</key>
-		<dict>
-			<key>from</key>
-			<string>06EFF889-41CE-4795-9459-DDD0824BF9C9 - 06EFF889-41CE-4795-9459-DDD0824BF9C9</string>
-			<key>to</key>
-			<string>49CF4862-3958-4700-9073-6681750E8DE6 - 49CF4862-3958-4700-9073-6681750E8DE6</string>
 		</dict>
 	</dict>
 	<key>workflowMetaData</key>
